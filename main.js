@@ -1,22 +1,25 @@
 const app = Vue.createApp({
     data() {
         return {
-            counter: 2,
-            tasks: [
-                "first task",
-                "second task"
-            ]
+            tasks: []
+        }
+    },
+    computed: {
+        taskCount() {
+            return this.tasks.length
         }
     },
     methods: {
         addNewTask(task) {
             this.tasks.push(task);
-            this.counter += 1;
+        },
+        removeTask(key) {
+            this.tasks.splice(key, 1);
         }
     }
 });
 
-app.component('tasks-list', {
+app.component('to-do', {
     data() {
         return {
             task: null,
@@ -49,18 +52,19 @@ app.component('tasks-list', {
         }
     },
     template: `
-        <div class="container-sm">
+        <div class="container-sm mt-2">
             <h4 class="mb-3">Remaining Tasks: {{ counter }}</h4>
 
-            <form @submit.prevent="submitTask">
-                <div v-if="error" class="alert alert-danger">{{ error }}</div>
-                <div class="mb-3">
-                    <input type="text" class="form-control" placeholder="What do you need to do?" v-model="task">
-                </div>
-            </form>
+            <div v-if="error" class="alert alert-danger">{{ error }}</div>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="What do you need to do?" v-model="task" @keyup.enter="submitTask">
+            </div>
 
-            <single-task v-for="(task, index) in tasks" :task="task" :key="index">
-            </single-task>
+            <div v-if="tasks.length > 0">
+                <single-task v-for="(task, index) in tasks" :task="task" :key="index" :pkey="index">
+                </single-task>
+            </div>
+            <p v-else>To add a new task, write something and press ENTER.</p>
         </div>
     `
 });
@@ -70,12 +74,21 @@ app.component('single-task', {
         task: {
             type: String,
             required: true
+        },
+        pkey: {
+            type: Number,
+            required: true
+        }
+    },
+    methods: {
+        deleteTask() {
+            this.$parent.$emit('delete-task', this.pkey);
         }
     },
     template: `
-        <div class="alert alert-success alert-dismissible fade show my-3" role="alert">
+        <div class="alert alert-success my-3 d-flex justify-content-between" role="alert">
             {{ task }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" @click="deleteTask"></button>
         </div>
     `
 })
